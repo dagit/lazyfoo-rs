@@ -1,0 +1,10 @@
+[package]
+name = "lazyfoo-rs"
+version = "0.1.0"
+authors = ["Jason Dagit <dagitj@gmail.com>"]
+
+[dependencies]
+
+[dependencies.sdl2]
+features = ["image"]
+version  = "*"
