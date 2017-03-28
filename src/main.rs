@@ -230,7 +230,7 @@ impl Dot {
         Dot{ bounds: Rect::new(0, 0, DOT_WIDTH, DOT_HEIGHT)
            , vel_x:  0
            , vel_y:  0
-           }
+        }
     }
 
     pub fn handle_event(&mut self, e: &Event)
@@ -319,12 +319,12 @@ impl Dot {
 //Texture wrapper class
 pub struct LTexture
 {
-		//The actual hardware texture
-		texture: Texture,
+    //The actual hardware texture
+    texture: Texture,
 
-		//Image dimensions
-		width:  u32,
-		height: u32,
+    //Image dimensions
+    width:  u32,
+    height: u32,
 }
 
 pub struct LTextureBuilder
@@ -340,7 +340,7 @@ impl LTextureBuilder {
         LTextureBuilder{texture: None, width: None, height: None}
     }
 
-		//Loads image at specified path
+    //Loads image at specified path
     pub fn load_from_file(app: &mut AppBuilder, path: &str) -> Result<LTexture, String>
     {
         let mut tb = LTextureBuilder::new();
@@ -354,7 +354,7 @@ impl LTextureBuilder {
                  .map_err(|e| format!("Unable to create texture from {} SDL Error: {}",
                                       path, e)));
         tb.texture = Some(texture.expect("Missing Renderer")
-                                 .expect("Failed to create texture"));
+                          .expect("Failed to create texture"));
         tb.build()
     }
 
@@ -369,26 +369,27 @@ impl LTextureBuilder {
 
 impl LTexture {
 
-		//Set color modulation
-		pub fn set_color(&mut self, red: u8, green: u8, blue: u8)
+    //Set color modulation
+    pub fn set_color(&mut self, red: u8, green: u8, blue: u8)
     {
         self.texture.set_color_mod(red, green, blue )
     }
 
-		//Set blending
+    //Set blending
     pub fn set_blend_mode(&mut self, blending: BlendMode )
     {
         self.texture.set_blend_mode(blending)
     }
 
-		//Set alpha modulation
-		pub fn set_alpha(&mut self, alpha: u8 )
+    //Set alpha modulation
+    pub fn set_alpha(&mut self, alpha: u8 )
     {
         self.texture.set_alpha_mod( alpha )
     }
 
-		//Renders texture at given point
-    pub fn render<'a>(&mut self, renderer: &mut Renderer, x: i32, y: i32, clip: Option<Rect>,
+    //Renders texture at given point
+    pub fn render<'a>(&mut self, renderer: &mut Renderer,
+                      x: i32, y: i32, clip: Option<Rect>,
                       angle: f64, center: Option<Point>) -> Result<(), String>
     {
         let mut render_quad: Rect = Rect::new(x, y, self.width as u32, self.height as u32);
@@ -400,7 +401,7 @@ impl LTexture {
                          clip, Some(render_quad), angle, center, false, false)
     }
 
-		//Gets image dimensions
+    //Gets image dimensions
     pub fn get_width(&self) -> u32
     {
         self.width
@@ -410,8 +411,6 @@ impl LTexture {
         self.height
     }
 }
-
-
 
 fn main() {
     println!("Hello, world!");
@@ -425,8 +424,8 @@ fn main() {
     'main: loop {
         for event in event_pump.poll_iter() {
             match event {
-                Event::Quit   { .. }           => break 'main,
-                _ => {},
+                Event::Quit{ .. } => break 'main,
+                _                 => {},
             }
             dot.handle_event(&event);
         }
@@ -515,13 +514,13 @@ fn set_tiles(app: &mut AppBuilder) -> Result<(), String>
                 app.tile_set.push( Tile::new( x, y, tt ) );
                 x += TILE_WIDTH;
                 //If we've gone too far
-	              if x >= LEVEL_WIDTH
-	              {
-	              		//Move back
-	              		x = 0;
-	              		//Move to the next row
-	              		y += TILE_HEIGHT;
-	              }
+                if x >= LEVEL_WIDTH
+                {
+                    //Move back
+                    x = 0;
+                    //Move to the next row
+                    y += TILE_HEIGHT;
+                }
             }
         }
     }
