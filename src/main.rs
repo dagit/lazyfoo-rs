@@ -1,5 +1,7 @@
 extern crate sdl2;
 
+use std::cell::RefCell;
+
 use sdl2::rect::Rect;
 use sdl2::rect::Point;
 use sdl2::event::Event;
@@ -104,7 +106,7 @@ impl<'a> AppBuilder<'a> {
         let tile_set      = self.tile_set;
         Ok(App {
             sdl_context:   sdl_context,
-            renderer:      renderer,
+            renderer:      RefCell::new(renderer),
             image_context: image_context,
             tile_texture:  tile_texture,
             dot_texture:   dot_texture,
@@ -114,8 +116,8 @@ impl<'a> AppBuilder<'a> {
     }
 }
 pub struct App<'a> {
-    pub sdl_context:  sdl2::Sdl,
-    pub renderer:      Renderer<'a>,
+    pub sdl_context:   sdl2::Sdl,
+    pub renderer:      RefCell<Renderer<'a>>,
     pub image_context: sdl2::image::Sdl2ImageContext,
     pub tile_texture:  LTexture,
     pub dot_texture:   LTexture,
@@ -144,7 +146,7 @@ impl<'a> App<'a> {
     }
 }
 
-#[derive(Copy,Clone)]
+#[derive(Clone)]
 pub struct Tile {
     bounds      : Rect,
     sprite_type : TileSprite,
@@ -195,11 +197,11 @@ impl Tile {
         Self{bounds: Rect::new(x as i32, y as i32, TILE_WIDTH, TILE_HEIGHT), sprite_type: sprite_type}
     }
 
-    fn render<'a>(&self, app: &mut App<'a>, camera: &Rect) -> Result<(), String>
+    fn render<'a>(&self, app: &App<'a>, camera: &Rect) -> Result<(), String>
     {
         let clip = app.get_clip( self.sprite_type );
         if check_collision(camera, &self.bounds) {
-            app.tile_texture.render( &mut app.renderer,
+            app.tile_texture.render( &mut app.renderer.borrow_mut(),
                                      self.bounds.x - camera.x,
                                      self.bounds.y - camera.y,
                                      clip, 0.0f64, None)?
@@ -307,9 +309,9 @@ impl Dot {
         }
     }
 
-    pub fn render<'a>(&self, app: &mut App<'a>, camera: &Rect) -> Result<(), String>
+    pub fn render<'a>(&self, app: &App<'a>, camera: &Rect) -> Result<(), String>
     {
-        app.dot_texture.render( &mut app.renderer,
+        app.dot_texture.render( &mut app.renderer.borrow_mut(),
                                 self.bounds.x - camera.x,
                                 self.bounds.y - camera.y,
                                 None, 0.0f64, None)
@@ -388,7 +390,7 @@ impl LTexture {
     }
 
     //Renders texture at given point
-    pub fn render<'a>(&mut self, renderer: &mut Renderer,
+    pub fn render<'a>(&self, renderer: &mut Renderer,
                       x: i32, y: i32, clip: Option<Rect>,
                       angle: f64, center: Option<Point>) -> Result<(), String>
     {
@@ -417,10 +419,10 @@ fn main() {
     let mut app_builder = App::new();
     init(&mut app_builder).expect("Failed to initialize");
     load_media(&mut app_builder).expect("Failed to load media");
-    let mut app = app_builder.build().expect("Failed to build app");
-    let mut camera = Rect::new(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    let     app         = app_builder.build().expect("Failed to build app");
+    let mut camera      = Rect::new(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     let mut event_pump  = app.sdl_context.event_pump().unwrap();
-    let mut dot = Dot::new();
+    let mut dot         = Dot::new();
     'main: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -432,14 +434,15 @@ fn main() {
         dot.move_dot( &app.tile_set );
         dot.set_camera( &mut camera );
 
-        app.renderer.set_draw_color(Color::RGBA(0xff, 0xff, 0xff, 0xff));
-        app.renderer.clear();
+        app.renderer.borrow_mut().set_draw_color(Color::RGBA(0xff, 0xff, 0xff, 0xff));
+        app.renderer.borrow_mut().clear();
         for i in 0..TOTAL_TILES as usize {
-            let t = app.tile_set[i];
-            t.render(&mut app, &camera).expect("Render failed");
+            // unnecessary copy
+            let ref t = app.tile_set[i];
+            t.render(&app, &camera).expect("Render failed");
         }
-        dot.render(&mut app, &camera).expect("Render failed");
-        app.renderer.present();
+        dot.render(&app, &camera).expect("Render failed");
+        app.renderer.borrow_mut().present();
     }
 }
 
